@@ -2,8 +2,6 @@
 Utility functions for the crawler.
 """
 import json
-from typing import Dict, Any
-
 
 def build_search_query(journal_title: str, 
                        from_year: str, 
