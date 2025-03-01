@@ -20,7 +20,7 @@ KEYWORDS: List[str] = [
 ]
 
 # Output configuration
-OUTPUT_PATH: str = "radiol_ai_lang_model_papers.json"
+OUTPUT_PATH: str = "outputs/radiol_ai_lang_model_papers.json"
 
 # Article type filtering
 RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorials, letters, and comments
