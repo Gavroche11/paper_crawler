@@ -26,5 +26,6 @@ OUTPUT_PATH: str = "outputs/radiol_ai_lang_model_papers.json"
 RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorials, letters, and comments
 
 # Execution configuration
-VERBOSE: bool = False
+BATCH_SIZE: int = 100  # Number of articles to fetch per request
 DELAY: float = 0.34  # Delay between requests to avoid hitting API rate limits
+VERBOSE: bool = False

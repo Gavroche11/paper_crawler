@@ -80,7 +80,7 @@ def run_crawler(args: Optional[Namespace] = None) -> None:
         print(f"Will fetch up to {max_articles} articles.")
     
     # Search PubMed for matching PMIDs
-    pmids = get_all_pubmed_ids(query, max_articles)
+    pmids = get_all_pubmed_ids(query, max_articles, config.BATCH_SIZE)
     print(f"Retrieved {len(pmids)} PubMed IDs.\n")
     
     if not pmids:
@@ -88,11 +88,11 @@ def run_crawler(args: Optional[Namespace] = None) -> None:
         return
     
     # Fetch article details
-    articles = fetch_article_details(pmids)
+    articles = fetch_article_details(pmids, config.BATCH_SIZE)
     print(f"Retrieved details for {len(articles)} articles.\n")
     
     # Fetch abstracts for articles
-    fetch_abstracts(articles)
+    fetch_abstracts(articles, config.BATCH_SIZE)
     
     # Filter for language model related articles
     relevant_articles = filter_articles_by_keywords(articles, config.KEYWORDS)

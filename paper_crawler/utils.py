@@ -2,6 +2,12 @@
 Utility functions for the crawler.
 """
 import json
+from .config import VERBOSE
+
+def vprint(*args, **kwargs):
+    """Print only if verbose mode is enabled."""
+    if VERBOSE:
+        print(*args, **kwargs)
 
 def build_search_query(journal_title: str, 
                        from_year: str, 

@@ -6,13 +6,8 @@ import requests
 from typing import List, Dict, Optional, Any
 from xml.etree import ElementTree as ET
 
-from .config import DELAY, VERBOSE
-
-def vprint(*args, **kwargs):
-    """Print only if verbose mode is enabled."""
-    if VERBOSE:
-        print(*args, **kwargs)
-
+from .config import DELAY
+from .utils import vprint
 
 def fetch_pubmed_ids(query: str,
                      retmax: int = 100,
@@ -79,7 +74,7 @@ def get_all_pubmed_ids(query: str,
     if total_count == 0:
         return []
     
-    num_batch = 1
+    batch_idx = 0
     
     while True:
         # Decide how many items to fetch this round
@@ -93,7 +88,7 @@ def get_all_pubmed_ids(query: str,
                 break
             to_fetch = min(max_step, remaining)
         
-        vprint(f"Fetching batch {num_batch} - results {retstart+1} to {retstart+to_fetch}...")
+        vprint(f"Fetching batch {batch_idx+1} - results {retstart+1} to {retstart+to_fetch}...")
         
         data = fetch_pubmed_ids(query, retmax=to_fetch, retstart=retstart)
         if not data or "esearchresult" not in data or "idlist" not in data["esearchresult"]:
@@ -107,7 +102,7 @@ def get_all_pubmed_ids(query: str,
             break
         
         retstart += to_fetch
-        num_batch += 1
+        batch_idx += 1
         
         # Respect PubMed API rate limits (max 3 requests per second)
         time.sleep(DELAY)
@@ -115,7 +110,7 @@ def get_all_pubmed_ids(query: str,
     return all_pmids
 
 
-def fetch_article_details(pmids: List[str], batch_size: int = 200) -> List[Dict[str, Any]]:
+def fetch_article_details(pmids: List[str], batch_size: int = 100) -> List[Dict[str, Any]]:
     """
     Fetch details for articles with the given PMIDs.
     
@@ -187,7 +182,7 @@ def fetch_article_details(pmids: List[str], batch_size: int = 200) -> List[Dict[
     return articles
 
 
-def extract_abstracts_from_xml(xml_content: str, pmids: List[str]) -> Dict[str, str]:
+def extract_abstracts_from_xml(xml_content: str) -> Dict[str, str]:
     """
     Extract abstracts from PubMed XML response, handling structured abstracts.
     
@@ -301,12 +296,12 @@ def fetch_abstracts(articles: List[Dict],
     
     print(f"Fetching abstracts for {len(articles)} articles...")
     
-    for i in range(0, len(articles), batch_size):
+    for batch_idx, i in enumerate(range(0, len(articles), batch_size)):
         batch_articles = articles[i:i+batch_size]
         batch_pmids = [article["pmid"] for article in batch_articles]
         pmid_string = ",".join(batch_pmids)
         
-        vprint(f"Fetching abstracts for batch {i//batch_size + 1} of {total_batches}...")
+        vprint(f"Fetching abstracts for batch {batch_idx + 1} of {total_batches}...")
         
         # First try to get XML format which better preserves structured abstracts
         xml_params = {
@@ -322,7 +317,7 @@ def fetch_abstracts(articles: List[Dict],
             xml_content = xml_response.text
             
             # Parse XML to extract abstracts
-            abstracts_by_pmid = extract_abstracts_from_xml(xml_content, batch_pmids)
+            abstracts_by_pmid = extract_abstracts_from_xml(xml_content)
             
             # Update articles with abstracts from XML
             for article in batch_articles:
@@ -351,7 +346,7 @@ def fetch_abstracts(articles: List[Dict],
                 time.sleep(DELAY)
                 
         except Exception as e:
-            print(f"Error fetching abstracts for batch {i//batch_size + 1}: {e}")
+            print(f"Error fetching abstracts for batch {batch_idx + 1}: {e}")
         
         # Delay between batches
         time.sleep(DELAY)
