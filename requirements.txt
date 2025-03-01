@@ -1,0 +1,2 @@
+requests>=2.25.0
+xml-python>=0.4.3
