@@ -16,7 +16,7 @@ KEYWORDS: List[str] = [
     "language model", "llm", "gpt", "bert", "transformer", 
     "nlp", "natural language processing", "chatgpt", "claude", "prompt",
     "llama", "mistral", "gemini", "text-to-text", "text generation", "text embedding",
-    "foundation model", "generative ai"
+    "foundation model", "generative ai", "generative model"
 ]
 
 # Output configuration
@@ -29,3 +29,4 @@ RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorial
 BATCH_SIZE: int = 100  # Number of articles to fetch per request
 ABSTRACT_BATCH_SIZE: int = 10  # Number of abstracts to fetch per request
 DELAY: float = 0.34  # Delay between requests to avoid hitting API rate limits
+TIMEOUT: float = 30.0  # Timeout for API requests in seconds

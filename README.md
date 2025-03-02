@@ -48,7 +48,7 @@ python scripts/run_crawler.py
 --to-year TEXT        End year for search (default: "3000")
 --max-articles INT    Maximum articles to fetch, -1 for all (default: -1)
 --output TEXT         Output JSON file path (default: "outputs/paper_crawler_results.json")
---research-only       Include only research articles (exclude reviews, editorials, etc.)
+--research-only       Include only research articles; exclude reviews, editorials, etc. (default: True)
 ```
 
 ### Example

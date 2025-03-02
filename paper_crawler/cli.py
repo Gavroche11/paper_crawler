@@ -38,7 +38,7 @@ def parse_arguments(args=None) -> Namespace:
     parser.add_argument("--output", type=str, default=config.OUTPUT_PATH,
                         help=f"Output JSON file path (default: {config.OUTPUT_PATH})")
     
-    parser.add_argument("--research-only", action="store_true", default=config.RESEARCH_ARTICLES_ONLY,
+    parser.add_argument("--research-only", type=bool, default=config.RESEARCH_ARTICLES_ONLY,
                         help="Include only research articles (exclude reviews, editorials, etc.)")
     
     return parser.parse_args(args)
