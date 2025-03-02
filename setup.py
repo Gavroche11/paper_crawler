@@ -24,7 +24,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="pubmed, research, academic journals, papers, search",
-    url="https://github.com/yourusername/paper_crawler",
+    url="https://github.com/Gavroche11/paper_crawler",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
