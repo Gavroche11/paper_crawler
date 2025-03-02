@@ -43,12 +43,12 @@ python scripts/run_crawler.py
 ### Command-line Options
 
 ```
---journal TEXT        Journal title to search (default: "Radiol Artif Intell")
---from-year TEXT      Start year for search (default: "2019")
---to-year TEXT        End year for search (default: "3000")
---max-articles INT    Maximum articles to fetch, -1 for all (default: -1)
---output TEXT         Output JSON file path (default: "outputs/paper_crawler_results.json")
---research-only       Include only research articles; exclude reviews, editorials, etc. (default: True)
+--journal TEXT         Journal title to search (default: "Radiol Artif Intell")
+--from-year TEXT       Start year for search (default: "2019")
+--to-year TEXT         End year for search (default: "3000")
+--max-articles INT     Maximum articles to fetch, -1 for all (default: -1)
+--output TEXT          Output JSON file path (default: "outputs/radiol_ai_lang_model_papers.json")
+--research-only BOOL   Include only research articles; exclude reviews, editorials, etc. (default: True)
 ```
 
 ### Example
@@ -60,22 +60,57 @@ python -m paper_crawler --journal "Radiology" --from-year "2020" --to-year "2023
 
 ## Configuration
 
-You can customize the default search parameters by editing the `config.py` file:
+You can customize the default search parameters by editing the `config.py` file in the `paper_crawler` directory. This allows you to change the behavior without modifying the command-line arguments each time.
 
-- `JOURNAL_TITLE`: Default journal to search
-- `FROM_YEAR` & `TO_YEAR`: Date range for the search
-- `MAX_ARTICLES`: Maximum number of articles to retrieve (-1 for all)
-- `KEYWORDS`: List of keywords to filter articles by
-- `RESEARCH_ARTICLES_ONLY`: Whether to exclude reviews, editorials, etc.
-- `DELAY`: Delay between API requests to respect rate limits
+### Search Parameters
+
+```python
+# Journal and date range configuration
+JOURNAL_TITLE: str = "Radiol Artif Intell"  # Journal title to search
+FROM_YEAR: str = "2019"  # Start year for search (when the journal started)
+TO_YEAR: str = "3000"  # End year for search (using a large number for all future articles)
+
+# Article type filtering
+RESEARCH_ARTICLES_ONLY: bool = True  # Exclude reviews, editorials, letters, and comments
+
+# Result limitations
+MAX_ARTICLES: int = -1  # Maximum number of articles to retrieve (-1 for all)
+```
+
+### Keyword Configuration
+
+Customize the list of keywords used to filter articles. The tool will find articles that contain any of these keywords in their title or abstract:
+
+```python
+# Keywords to search for in titles and abstracts
+KEYWORDS: List[str] = [
+    "language model", "llm", "gpt", "bert", "transformer", 
+    "nlp", "natural language processing", "chatgpt", "claude", "prompt",
+    "llama", "mistral", "gemini", "text-to-text", "text generation", "text embedding",
+    "foundation model", "generative ai", "generative model"
+]
+```
+
+### Output and Performance Settings
+
+```python
+# Output configuration
+OUTPUT_PATH: str = "outputs/radiol_ai_lang_model_papers.json"  # Path for results
+
+# Execution configuration
+BATCH_SIZE: int = 100  # Number of articles to fetch per request
+ABSTRACT_BATCH_SIZE: int = 10  # Number of abstracts to fetch per request
+DELAY: float = 0.34  # Delay between requests to avoid hitting API rate limits
+TIMEOUT: float = 30.0  # Timeout for API requests in seconds
+```
 
 ## Output
 
 The tool generates a JSON file containing:
 - Search query used
-- Total articles found
+- Number of total articles found
 - Keywords used for filtering
-- Count of relevant articles
+- Number of of relevant articles
 - Full details of each article (title, authors, abstract, etc.)
 
 ## License

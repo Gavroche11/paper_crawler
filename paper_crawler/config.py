@@ -8,6 +8,9 @@ JOURNAL_TITLE: str = "Radiol Artif Intell"  # Journal title to search
 FROM_YEAR: str = "2019"  # Start year for search
 TO_YEAR: str = "3000"  # End year for search (a large number to include all future years)
 
+# Article type filtering
+RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorials, letters, and comments
+
 # Result limitations
 MAX_ARTICLES: int = -1  # If set to -1, the code will attempt to fetch all articles
 
@@ -20,10 +23,7 @@ KEYWORDS: List[str] = [
 ]
 
 # Output configuration
-OUTPUT_PATH: str = "outputs/radiol_ai_lang_model_papers.json"
-
-# Article type filtering
-RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorials, letters, and comments
+OUTPUT_PATH: str = "outputs/radiol_ai_lang_model_papers.json"  # Path for results
 
 # Execution configuration
 BATCH_SIZE: int = 100  # Number of articles to fetch per request
