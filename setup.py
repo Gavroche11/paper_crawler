@@ -10,6 +10,7 @@ setup(
     install_requires=[
         "requests>=2.25.0",
         "xml-python>=0.4.3",
+        "tqdm>=4.64.0",
     ],
     entry_points={
         "console_scripts": [

@@ -14,9 +14,9 @@ MAX_ARTICLES: int = -1  # If set to -1, the code will attempt to fetch all artic
 # Keywords to search for in titles and abstracts
 KEYWORDS: List[str] = [
     "language model", "llm", "gpt", "bert", "transformer", 
-    "nlp", "natural language processing", "chatgpt", "claude", "prompt", "prompting",
+    "nlp", "natural language processing", "chatgpt", "claude", "prompt",
     "llama", "mistral", "gemini", "text-to-text", "text generation", "text embedding",
-    "foundation model", "generative model"
+    "foundation model", "generative ai"
 ]
 
 # Output configuration
@@ -27,5 +27,5 @@ RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorial
 
 # Execution configuration
 BATCH_SIZE: int = 100  # Number of articles to fetch per request
+ABSTRACT_BATCH_SIZE: int = 10  # Number of abstracts to fetch per request
 DELAY: float = 0.34  # Delay between requests to avoid hitting API rate limits
-VERBOSE: bool = False

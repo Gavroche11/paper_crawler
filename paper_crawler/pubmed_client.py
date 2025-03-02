@@ -5,9 +5,9 @@ import time
 import requests
 from typing import List, Dict, Optional, Any
 from xml.etree import ElementTree as ET
+from tqdm import tqdm
 
-from .config import DELAY
-from .utils import vprint
+from . import config
 
 def fetch_pubmed_ids(query: str,
                      retmax: int = 100,
@@ -47,9 +47,8 @@ def get_all_pubmed_ids(query: str,
                        max_articles: int = 100,
                        max_step: int = 100) -> List[str]:
     """
-    Fetches PubMed IDs in pages of 'step' items.
-    If max_articles == -1, fetch until the API returns no more results.
-    Otherwise, stop after max_articles.
+    Fetches PubMed IDs in pages of 'step' items with a progress bar.
+    If max_articles == -1, fetch all results up to the total count.
     
     Args:
         query: PubMed search query
@@ -59,9 +58,6 @@ def get_all_pubmed_ids(query: str,
     Returns:
         List of PubMed IDs
     """
-    all_pmids = []
-    retstart = 0
-    
     # First make a request to get the total count
     initial_data = fetch_pubmed_ids(query, retmax=1)
     if not initial_data:
@@ -74,38 +70,45 @@ def get_all_pubmed_ids(query: str,
     if total_count == 0:
         return []
     
-    batch_idx = 0
+    # If max_articles is -1, set it to total_count
+    if max_articles == -1:
+        max_articles = total_count
     
-    while True:
-        # Decide how many items to fetch this round
-        if max_articles == -1:
-            # fetch 'step' items every time, no upper limit
-            to_fetch = max_step
-        else:
-            # fetch the smaller of 'step' or whatever remains
+    # Calculate number of batches needed
+    num_batches = (min(total_count, max_articles) + max_step - 1) // max_step
+
+    all_pmids = []
+    
+    # Create progress bar
+    with tqdm(total=min(total_count, max_articles), desc="Fetching PubMed IDs") as pbar:
+        for batch_idx in range(num_batches):
+            retstart = batch_idx * max_step
+            
+            # Calculate how many items to fetch in this batch
             remaining = max_articles - len(all_pmids)
             if remaining <= 0:
                 break
+                
             to_fetch = min(max_step, remaining)
-        
-        vprint(f"Fetching batch {batch_idx+1} - results {retstart+1} to {retstart+to_fetch}...")
-        
-        data = fetch_pubmed_ids(query, retmax=to_fetch, retstart=retstart)
-        if not data or "esearchresult" not in data or "idlist" not in data["esearchresult"]:
-            break  # no more valid data
-        
-        id_list = data["esearchresult"]["idlist"]
-        all_pmids.extend(id_list)
-        
-        # If PubMed returns fewer items than requested, we've reached the end
-        if len(id_list) < to_fetch:
-            break
-        
-        retstart += to_fetch
-        batch_idx += 1
-        
-        # Respect PubMed API rate limits (max 3 requests per second)
-        time.sleep(DELAY)
+            
+            # vprint(f"Fetching batch {batch_idx+1} - results {retstart+1} to {retstart+to_fetch}...")
+            
+            data = fetch_pubmed_ids(query, retmax=to_fetch, retstart=retstart)
+            if not data or "esearchresult" not in data or "idlist" not in data["esearchresult"]:
+                break  # no more valid data
+            
+            id_list = data["esearchresult"]["idlist"]
+            all_pmids.extend(id_list)
+            
+            # Update progress bar
+            pbar.update(len(id_list))
+            
+            # If PubMed returns fewer items than requested, we've reached the end
+            if len(id_list) < to_fetch:
+                break
+            
+            # Respect PubMed API rate limits (max 3 requests per second)
+            time.sleep(config.DELAY)
     
     return all_pmids
 
@@ -130,54 +133,57 @@ def fetch_article_details(pmids: List[str], batch_size: int = 100) -> List[Dict[
     # Process in batches to avoid exceeding URL length limits
     total_batches = (len(pmids) + batch_size - 1) // batch_size
     
-    for i in range(0, len(pmids), batch_size):
-        batch_pmids = pmids[i:i+batch_size]
-        pmid_string = ",".join(batch_pmids)
-        
-        vprint(f"Fetching details for batch {i//batch_size + 1} of {total_batches}...")
-        
-        params = {
-            "db": "pubmed",
-            "id": pmid_string,
-            "retmode": "json"
-        }
-        
-        try:
-            response = requests.get(base_url, params=params, timeout=30)
-            response.raise_for_status()
+    # Create a progress bar
+    with tqdm(total=len(pmids), desc="Fetching article details") as pbar:
+        for batch_idx in range(total_batches):
+            batch_pmids = pmids[batch_idx*batch_size:(batch_idx+1)*batch_size]
+            pmid_string = ",".join(batch_pmids)
             
-            summary_data = response.json()
-            result = summary_data.get("result", {})
+            params = {
+                "db": "pubmed",
+                "id": pmid_string,
+                "retmode": "json"
+            }
             
-            # Remove the UIDs list which contains duplicate information
-            uids = result.pop("uids", []) if "uids" in result else []
+            try:
+                response = requests.get(base_url, params=params, timeout=30)
+                response.raise_for_status()
+                
+                summary_data = response.json()
+                result = summary_data.get("result", {})
+                
+                # Remove the UIDs list which contains duplicate information
+                uids = result.pop("uids", []) if "uids" in result else []
+                
+                # Process each article in this batch
+                for pmid in uids:
+                    try:
+                        article_data = result.get(pmid, {})
+                        
+                        # Create a cleaner article object
+                        clean_article = {
+                            "pmid": pmid,
+                            "title": " ".join(article_data.get("title", "").split()),
+                            "journal": article_data.get("fulljournalname", ""),
+                            "pub_date": article_data.get("pubdate", ""),
+                            "doi": article_data.get("elocationid", "").replace("doi: ", "") if "elocationid" in article_data else "",
+                            "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else "",
+                            "authors": [author.get("name", "") for author in article_data.get("authors", [])],
+                            "abstract": ""  # Will fetch separately
+                        }
+                        
+                        articles.append(clean_article)
+                    except Exception as e:
+                        print(f"Error processing article {pmid}: {e}")
+                
+                # Update progress bar with the number of articles processed in this batch
+                pbar.update(len(batch_pmids))
             
-            # Process each article in this batch
-            for pmid in uids:
-                try:
-                    article_data = result.get(pmid, {})
-                    
-                    # Create a cleaner article object
-                    clean_article = {
-                        "pmid": pmid,
-                        "title": " ".join(article_data.get("title", "").split()),
-                        "journal": article_data.get("fulljournalname", ""),
-                        "pub_date": article_data.get("pubdate", ""),
-                        "doi": article_data.get("elocationid", "").replace("doi: ", "") if "elocationid" in article_data else "",
-                        "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else "",
-                        "authors": [author.get("name", "") for author in article_data.get("authors", [])],
-                        "abstract": ""  # Will fetch separately
-                    }
-                    
-                    articles.append(clean_article)
-                except Exception as e:
-                    print(f"Error processing article {pmid}: {e}")
-        
-        except Exception as e:
-            print(f"Error fetching batch {i//batch_size + 1}: {e}")
-        
-        # Respect API rate limits
-        time.sleep(DELAY)
+            except Exception as e:
+                print(f"Error fetching batch {batch_idx + 1}: {e}")
+            
+            # Respect API rate limits
+            time.sleep(config.DELAY)
     
     return articles
 
@@ -291,62 +297,66 @@ def fetch_abstracts(articles: List[Dict],
         articles: List of article dictionaries
         batch_size: Number of articles to process per batch
     """
+    
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
     total_batches = (len(articles) + batch_size - 1) // batch_size
     
     print(f"Fetching abstracts for {len(articles)} articles...")
     
-    for batch_idx, i in enumerate(range(0, len(articles), batch_size)):
-        batch_articles = articles[i:i+batch_size]
-        batch_pmids = [article["pmid"] for article in batch_articles]
-        pmid_string = ",".join(batch_pmids)
-        
-        vprint(f"Fetching abstracts for batch {batch_idx + 1} of {total_batches}...")
-        
-        # First try to get XML format which better preserves structured abstracts
-        xml_params = {
-            "db": "pubmed",
-            "id": pmid_string,
-            "rettype": "abstract",
-            "retmode": "xml"
-        }
-        
-        try:
-            xml_response = requests.get(base_url, params=xml_params, timeout=30)
-            xml_response.raise_for_status()
-            xml_content = xml_response.text
+    # Create a progress bar
+    with tqdm(total=len(articles), desc="Fetching abstracts") as pbar:
+        for batch_idx in range(total_batches):
+            batch_articles = articles[batch_idx*batch_size:(batch_idx+1)*batch_size]
+            batch_pmids = [article["pmid"] for article in batch_articles]
+            pmid_string = ",".join(batch_pmids)
             
-            # Parse XML to extract abstracts
-            abstracts_by_pmid = extract_abstracts_from_xml(xml_content)
+            # First try to get XML format which better preserves structured abstracts
+            xml_params = {
+                "db": "pubmed",
+                "id": pmid_string,
+                "rettype": "abstract",
+                "retmode": "xml"
+            }
             
-            # Update articles with abstracts from XML
-            for article in batch_articles:
-                pmid = article["pmid"]
-                if pmid in abstracts_by_pmid and abstracts_by_pmid[pmid]:
-                    article["abstract"] = abstracts_by_pmid[pmid]
-                    continue
+            try:
+                xml_response = requests.get(base_url, params=xml_params, timeout=30)
+                xml_response.raise_for_status()
+                xml_content = xml_response.text
+                
+                # Parse XML to extract abstracts
+                abstracts_by_pmid = extract_abstracts_from_xml(xml_content)
+                
+                # Update articles with abstracts from XML
+                for article in batch_articles:
+                    pmid = article["pmid"]
+                    if pmid in abstracts_by_pmid and abstracts_by_pmid[pmid]:
+                        article["abstract"] = abstracts_by_pmid[pmid]
+                        continue
+                        
+                    # If we didn't get an abstract from XML, try plain text as fallback
+                    text_params = {
+                        "db": "pubmed",
+                        "id": pmid,
+                        "rettype": "abstract",
+                        "retmode": "text"
+                    }
                     
-                # If we didn't get an abstract from XML, try plain text as fallback
-                text_params = {
-                    "db": "pubmed",
-                    "id": pmid,
-                    "rettype": "abstract",
-                    "retmode": "text"
-                }
+                    text_response = requests.get(base_url, params=text_params, timeout=30)
+                    text_response.raise_for_status()
+                    text_content = text_response.text
+                    
+                    # Extract abstract from text
+                    abstract = extract_abstract_from_text(text_content)
+                    article["abstract"] = abstract
+                    
+                    # Add a small delay between individual requests
+                    time.sleep(config.DELAY)
                 
-                text_response = requests.get(base_url, params=text_params, timeout=30)
-                text_response.raise_for_status()
-                text_content = text_response.text
-                
-                # Extract abstract from text
-                abstract = extract_abstract_from_text(text_content)
-                article["abstract"] = abstract
-                
-                # Add a small delay between individual requests
-                time.sleep(DELAY)
-                
-        except Exception as e:
-            print(f"Error fetching abstracts for batch {batch_idx + 1}: {e}")
-        
-        # Delay between batches
-        time.sleep(DELAY)
+                # Update progress bar
+                pbar.update(len(batch_articles))
+                    
+            except Exception as e:
+                print(f"Error fetching abstracts for batch {batch_idx + 1}: {e}")
+            
+            # Delay between batches
+            time.sleep(config.DELAY)

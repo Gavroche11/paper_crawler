@@ -47,9 +47,8 @@ python scripts/run_crawler.py
 --from-year TEXT      Start year for search (default: "2019")
 --to-year TEXT        End year for search (default: "3000")
 --max-articles INT    Maximum articles to fetch, -1 for all (default: -1)
---output TEXT         Output JSON file path (default: "paper_crawler_results.json")
+--output TEXT         Output JSON file path (default: "outputs/paper_crawler_results.json")
 --research-only       Include only research articles (exclude reviews, editorials, etc.)
---verbose             Enable verbose output
 ```
 
 ### Example
@@ -68,7 +67,6 @@ You can customize the default search parameters by editing the `config.py` file:
 - `MAX_ARTICLES`: Maximum number of articles to retrieve (-1 for all)
 - `KEYWORDS`: List of keywords to filter articles by
 - `RESEARCH_ARTICLES_ONLY`: Whether to exclude reviews, editorials, etc.
-- `VERBOSE`: Enable detailed logging
 - `DELAY`: Delay between API requests to respect rate limits
 
 ## Output

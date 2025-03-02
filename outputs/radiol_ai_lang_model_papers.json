@@ -1,6 +1,6 @@
 {
   "search_query": "\"Radiol Artif Intell\"[Journal] AND 2019:3000[pdat] AND (\"Journal Article\"[Publication Type] NOT \"Review\"[Publication Type] NOT \"Editorial\"[Publication Type] NOT \"Letter\"[Publication Type] NOT \"Comment\"[Publication Type])",
-  "total_articles_found": 346,
+  "num_total_articles": 346,
   "keywords": [
     "language model",
     "llm",
@@ -22,8 +22,8 @@
     "foundation model",
     "generative model"
   ],
-  "language_model_articles_count": 30,
-  "articles": [
+  "num_relevant_articles": 30,
+  "relevant_articles": [
     {
       "pmid": "39166972",
       "title": "Deep Learning-based Unsupervised Domain Adaptation via a Unified Model for Prostate Lesion Detection Using Multisite Biparametric MRI Datasets.",

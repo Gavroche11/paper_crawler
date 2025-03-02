@@ -2,12 +2,6 @@
 Utility functions for the crawler.
 """
 import json
-from .config import VERBOSE
-
-def vprint(*args, **kwargs):
-    """Print only if verbose mode is enabled."""
-    if VERBOSE:
-        print(*args, **kwargs)
 
 def build_search_query(journal_title: str, 
                        from_year: str, 
@@ -54,10 +48,10 @@ def save_results_to_json(output_path: str,
     """
     result = {
         "search_query": search_query,
-        "total_articles_found": total_count,
+        "num_total_articles": total_count,
         "keywords": keywords,
-        "language_model_articles_count": len(filtered_articles),
-        "articles": filtered_articles
+        "num_relevant_articles": len(filtered_articles),
+        "relevant_articles": filtered_articles
     }
     
     with open(output_path, "w") as f:

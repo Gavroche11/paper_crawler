@@ -41,9 +41,6 @@ def parse_arguments(args=None) -> Namespace:
     parser.add_argument("--research-only", action="store_true", default=config.RESEARCH_ARTICLES_ONLY,
                         help="Include only research articles (exclude reviews, editorials, etc.)")
     
-    parser.add_argument("--verbose", action="store_true", default=config.VERBOSE,
-                        help="Enable verbose output")
-    
     return parser.parse_args(args)
 
 
@@ -65,7 +62,6 @@ def run_crawler(args: Optional[Namespace] = None) -> None:
     max_articles = args.max_articles
     output_path = args.output
     research_only = args.research_only
-    config.VERBOSE = args.verbose
     
     # Build the search query
     query = build_search_query(journal_title, from_year, to_year, research_only)
@@ -92,7 +88,7 @@ def run_crawler(args: Optional[Namespace] = None) -> None:
     print(f"Retrieved details for {len(articles)} articles.\n")
     
     # Fetch abstracts for articles
-    fetch_abstracts(articles, config.BATCH_SIZE)
+    fetch_abstracts(articles, config.ABSTRACT_BATCH_SIZE)
     
     # Filter for language model related articles
     relevant_articles = filter_articles_by_keywords(articles, config.KEYWORDS)
