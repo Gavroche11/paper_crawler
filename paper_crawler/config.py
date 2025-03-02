@@ -30,3 +30,5 @@ BATCH_SIZE: int = 100  # Number of articles to fetch per request
 ABSTRACT_BATCH_SIZE: int = 10  # Number of abstracts to fetch per request
 DELAY: float = 0.34  # Delay between requests to avoid hitting API rate limits
 TIMEOUT: float = 30.0  # Timeout for API requests in seconds
+MAX_RETRIES: int = 5  # Maximum number of retries for failed requests
+BASE_WAIT_TIME: float = 1.0  # Base wait time for exponential backoff

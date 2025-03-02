@@ -10,8 +10,8 @@ from tqdm import tqdm
 from . import config
 
 def fetch_with_retry(url: str, params: Dict[str, Any], 
-                    max_retries: int = 5, 
-                    base_delay: float = 1.0) -> Optional[requests.Response]:
+                    max_retries: int = config.MAX_RETRIES, 
+                    base_wait_time: float = config.BASE_WAIT_TIME) -> Optional[requests.Response]:
     """
     Fetch data from URL with exponential backoff retry logic.
     
@@ -19,7 +19,7 @@ def fetch_with_retry(url: str, params: Dict[str, Any],
         url: URL to fetch data from
         params: Dictionary of URL parameters
         max_retries: Maximum number of retry attempts
-        base_delay: Base delay between retries in seconds (will be exponentially increased)
+        base_wait_time: Base wait time between retries in seconds (will be exponentially increased)
         
     Returns:
         Response object if successful, None otherwise
@@ -33,7 +33,7 @@ def fetch_with_retry(url: str, params: Dict[str, Any],
         except requests.exceptions.ConnectionError as e:
             # Connection errors (network unreachable, etc.)
             if attempt < max_retries - 1:
-                wait_time = base_delay * (2 ** attempt)  # Exponential backoff
+                wait_time = base_wait_time * (2 ** attempt)  # Exponential backoff
                 print(f"Network unreachable (attempt {attempt+1}/{max_retries}). "
                       f"Retrying in {wait_time:.1f}s...")
                 time.sleep(wait_time)
@@ -44,7 +44,7 @@ def fetch_with_retry(url: str, params: Dict[str, Any],
         except requests.exceptions.Timeout:
             # Timeout errors
             if attempt < max_retries - 1:
-                wait_time = base_delay * (2 ** attempt)
+                wait_time = base_wait_time * (2 ** attempt)
                 print(f"Request timed out (attempt {attempt+1}/{max_retries}). "
                       f"Retrying in {wait_time:.1f}s...")
                 time.sleep(wait_time)
@@ -55,12 +55,12 @@ def fetch_with_retry(url: str, params: Dict[str, Any],
         except requests.exceptions.HTTPError as e:
             # Handle specific HTTP errors
             if response.status_code == 429:  # Too Many Requests
-                wait_time = base_delay * (3 ** attempt)  # More aggressive backoff for rate limits
+                wait_time = base_wait_time * (3 ** attempt)  # More aggressive backoff for rate limits
                 print(f"Rate limited (attempt {attempt+1}/{max_retries}). "
                       f"Retrying in {wait_time:.1f}s...")
                 time.sleep(wait_time)
             elif response.status_code >= 500:  # Server errors
-                wait_time = base_delay * (2 ** attempt)
+                wait_time = base_wait_time * (2 ** attempt)
                 print(f"Server error {response.status_code} (attempt {attempt+1}/{max_retries}). "
                       f"Retrying in {wait_time:.1f}s...")
                 time.sleep(wait_time)
@@ -72,7 +72,7 @@ def fetch_with_retry(url: str, params: Dict[str, Any],
         except Exception as e:
             # Other unexpected errors
             if attempt < max_retries - 1:
-                wait_time = base_delay * (2 ** attempt)
+                wait_time = base_wait_time * (2 ** attempt)
                 print(f"Error: {e} (attempt {attempt+1}/{max_retries}). "
                       f"Retrying in {wait_time:.1f}s...")
                 time.sleep(wait_time)

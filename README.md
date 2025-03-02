@@ -48,14 +48,18 @@ python scripts/run_crawler.py
 --to-year TEXT         End year for search (default: "3000")
 --max-articles INT     Maximum articles to fetch, -1 for all (default: -1)
 --output TEXT          Output JSON file path (default: "outputs/radiol_ai_lang_model_papers.json")
---research-only BOOL   Include only research articles; exclude reviews, editorials, etc. (default: True)
+--include-all-types    Include all article types (reviews, editorials, etc.)
+                       Without this flag, only research articles are included (default behavior)
 ```
 
 ### Example
 
 ```bash
-# Search for papers in Radiology from 2020 to 2023, max 50 articles
-python -m paper_crawler --journal "Radiology" --from-year "2020" --to-year "2023" --max-articles 50
+# Search for language model papers in Radiology from 2020 to present, max 50 articles
+python -m paper_crawler --journal "Radiology" --from-year "2020" --max-articles 50
+
+# Include all article types (not just research articles)
+python -m paper_crawler --journal "Radiology" --include-all-types
 ```
 
 ## Configuration
@@ -102,6 +106,8 @@ BATCH_SIZE: int = 100  # Number of articles to fetch per request
 ABSTRACT_BATCH_SIZE: int = 10  # Number of abstracts to fetch per request
 DELAY: float = 0.34  # Delay between requests to avoid hitting API rate limits
 TIMEOUT: float = 30.0  # Timeout for API requests in seconds
+MAX_RETRIES: int = 5  # Maximum number of retries for failed requests
+BASE_WAIT_TIME: float = 1.0  # Base wait time for exponential backoff
 ```
 
 ## Output
