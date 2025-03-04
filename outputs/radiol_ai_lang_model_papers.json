@@ -12,7 +12,6 @@
     "chatgpt",
     "claude",
     "prompt",
-    "prompting",
     "llama",
     "mistral",
     "gemini",
@@ -20,6 +19,7 @@
     "text generation",
     "text embedding",
     "foundation model",
+    "generative ai",
     "generative model"
   ],
   "num_relevant_articles": 30,
