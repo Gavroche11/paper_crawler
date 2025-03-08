@@ -79,6 +79,9 @@ RESEARCH_ARTICLES_ONLY: bool = True  # Exclude reviews, editorials, letters, and
 
 # Result limitations
 MAX_ARTICLES: int = -1  # Maximum number of articles to retrieve (-1 for all)
+
+# Citation fetching
+FETCH_CITATIONS: bool = True  # Set to True to fetch citation counts for papers
 ```
 
 ### Keyword Configuration
@@ -117,7 +120,7 @@ The tool generates a JSON file containing:
 - Number of total articles found
 - Keywords used for filtering
 - Number of of relevant articles
-- Full details of each article (title, authors, abstract, etc.)
+- Full details of each article (title, authors, abstract, citation counts, etc.)
 
 ## License
 

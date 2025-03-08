@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from . import config
 from .pubmed_client import get_all_pubmed_ids, fetch_article_details, fetch_abstracts
 from .article_processor import filter_articles_by_keywords, display_article_summary
+from .citation_fetcher import enrich_articles_with_citations
 from .utils import build_search_query, save_results_to_json
 
 
@@ -42,6 +43,9 @@ def parse_arguments(args=None) -> Namespace:
                         default=config.RESEARCH_ARTICLES_ONLY,
                         help="Include all article types (reviews, editorials, etc.)")
     
+    parser.add_argument("--fetch-citations", action="store_true", default=config.FETCH_CITATIONS,
+                        help=f"Fetch citation counts for papers (default: {config.FETCH_CITATIONS})")
+    
     return parser.parse_args(args)
 
 
@@ -63,6 +67,7 @@ def run_crawler(args: Optional[Namespace] = None) -> None:
     max_articles = args.max_articles
     output_path = args.output
     research_only = args.research_only
+    fetch_citations = args.fetch_citations
     
     # Build the search query
     query = build_search_query(journal_title, from_year, to_year, research_only)
@@ -95,6 +100,9 @@ def run_crawler(args: Optional[Namespace] = None) -> None:
     relevant_articles = filter_articles_by_keywords(articles, config.KEYWORDS)
     
     print(f"Found {len(relevant_articles)} articles that contain at least one keyword:\n")
+
+    if fetch_citations:
+        enrich_articles_with_citations(relevant_articles, config.BATCH_SIZE)
     
     # Display results
     for article in relevant_articles[:5]:

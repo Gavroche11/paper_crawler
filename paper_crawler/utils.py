@@ -46,6 +46,7 @@ def save_results_to_json(output_path: str,
         keywords: Keywords used for filtering
         filtered_articles: List of filtered articles
     """
+    
     result = {
         "search_query": search_query,
         "num_total_articles": total_count,
@@ -53,6 +54,10 @@ def save_results_to_json(output_path: str,
         "num_relevant_articles": len(filtered_articles),
         "relevant_articles": filtered_articles
     }
+    
+    # Create directory if it doesn't exist
+    import os
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     with open(output_path, "w") as f:
         json.dump(result, f, indent=2)

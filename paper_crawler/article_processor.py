@@ -67,5 +67,7 @@ def display_article_summary(article: Dict[str, Any], max_abstract_length: int = 
     print(f"  DOI: {article['doi']}")
     print(f"  URL: {article['url']}")
     print(f"  Date: {article['pub_date']}")
+    if 'citation_count' in article:
+        print(f"  Citations: {article['citation_count']}")
     print(f"  Authors: {', '.join(article['authors']) if article['authors'] else 'N/A'}")
     print("")

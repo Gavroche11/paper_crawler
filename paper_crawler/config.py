@@ -14,6 +14,9 @@ RESEARCH_ARTICLES_ONLY: bool = True  # Set to True to exclude reviews, editorial
 # Result limitations
 MAX_ARTICLES: int = -1  # If set to -1, the code will attempt to fetch all articles
 
+# Citation fetching
+FETCH_CITATIONS: bool = True  # Set to True to fetch citation counts for papers
+
 # Keywords to search for in titles and abstracts
 KEYWORDS: List[str] = [
     "language model", "llm", "gpt", "bert", "transformer", 
